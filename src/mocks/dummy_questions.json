@@ -1,0 +1,81 @@
+{
+  "quiz-1": [
+    {
+      "id": "q1-1",
+      "quiz_id": "quiz-1",
+      "type": "multiple_choice",
+      "content": "Who is usually responsible for doing the 'heavy lifting' in a traditional family?",
+      "points": 5,
+      "answers": [
+        { "id": "a1-1-1", "question_id": "q1-1", "content": "The father", "is_correct": true },
+        { "id": "a1-1-2", "question_id": "q1-1", "content": "The mother", "is_correct": false },
+        { "id": "a1-1-3", "question_id": "q1-1", "content": "The youngest child", "is_correct": false },
+        { "id": "a1-1-4", "question_id": "q1-1", "content": "The grandmother", "is_correct": false }
+      ]
+    },
+    {
+      "id": "q1-2",
+      "quiz_id": "quiz-1",
+      "type": "true_false",
+      "content": "Doing chores helps children learn to take responsibility.",
+      "points": 5,
+      "answers": [
+        { "id": "a1-2-1", "question_id": "q1-2", "content": "Đúng (True)", "is_correct": true },
+        { "id": "a1-2-2", "question_id": "q1-2", "content": "Sai (False)", "is_correct": false }
+      ]
+    }
+  ],
+  "quiz-2": [
+    {
+      "id": "q2-1",
+      "quiz_id": "quiz-2",
+      "type": "multiple_choice",
+      "content": "Trái Đất mất bao lâu để hoàn thành một vòng tự quay quanh trục của nó?",
+      "points": 10,
+      "answers": [
+        { "id": "a2-1-1", "question_id": "q2-1", "content": "12 giờ", "is_correct": false },
+        { "id": "a2-1-2", "question_id": "q2-1", "content": "24 giờ (1 ngày)", "is_correct": true },
+        { "id": "a2-1-3", "question_id": "q2-1", "content": "365 ngày (1 năm)", "is_correct": false },
+        { "id": "a2-1-4", "question_id": "q2-1", "content": "30 ngày (1 tháng)", "is_correct": false }
+      ]
+    },
+    {
+      "id": "q2-2",
+      "quiz_id": "quiz-2",
+      "type": "true_false",
+      "content": "Mặt Trời quay quanh Trái Đất.",
+      "points": 10,
+      "answers": [
+        { "id": "a2-2-1", "question_id": "q2-2", "content": "Đúng (True)", "is_correct": false },
+        { "id": "a2-2-2", "question_id": "q2-2", "content": "Sai (False)", "is_correct": true }
+      ]
+    },
+    {
+      "id": "q2-3",
+      "quiz_id": "quiz-2",
+      "type": "multiple_choice",
+      "content": "Chất nào chiếm tỷ lệ lớn nhất trong bầu khí quyển của Trái Đất?",
+      "points": 10,
+      "answers": [
+        { "id": "a2-3-1", "question_id": "q2-3", "content": "Oxi (O2)", "is_correct": false },
+        { "id": "a2-3-2", "question_id": "q2-3", "content": "Nito (N2)", "is_correct": true },
+        { "id": "a2-3-3", "question_id": "q2-3", "content": "Cacbonic (CO2)", "is_correct": false },
+        { "id": "a2-3-4", "question_id": "q2-3", "content": "Hơi nước", "is_correct": false }
+      ]
+    }
+  ],
+  "quiz-3": [
+    {
+      "id": "q3-1",
+      "quiz_id": "quiz-3",
+      "type": "multiple_choice",
+      "content": "Chiến thắng Điện Biên Phủ 'lừng lẫy năm châu, chấn động địa cầu' diễn ra vào năm nào?",
+      "points": 10,
+      "answers": [
+        { "id": "a3-1-1", "question_id": "q3-1", "content": "1945", "is_correct": false },
+        { "id": "a3-1-2", "question_id": "q3-1", "content": "1954", "is_correct": true },
+        { "id": "a3-1-3", "question_id": "q3-1", "content": "1975", "is_correct": false }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "quiz-1",
+    "creator_id": "creator-1",
+    "title": "Kiểm tra Tiếng Anh 10 - Unit 1: Family Life",
+    "timer_minutes": 15,
+    "status": "published",
+    "created_at": "2026-06-20T08:30:00Z",
+    "participant_count": 42,
+    "average_score": 8.5
+  },
+  {
+    "id": "quiz-2",
+    "creator_id": "creator-1",
+    "title": "Đố vui Kiến thức Khoa học Tự nhiên & Đời sống",
+    "timer_minutes": 10,
+    "status": "published",
+    "created_at": "2026-06-25T14:15:00Z",
+    "participant_count": 128,
+    "average_score": 7.2
+  },
+  {
+    "id": "quiz-3",
+    "creator_id": "creator-1",
+    "title": "Lịch sử Việt Nam - Giai đoạn kháng chiến chống Pháp",
+    "timer_minutes": 20,
+    "status": "draft",
+    "created_at": "2026-06-26T09:00:00Z",
+    "participant_count": 0,
+    "average_score": 0
+  }
+]
