@@ -1,0 +1,23 @@
+[
+  {
+    "id": "course-1",
+    "title": "Lớp Tiếng Anh 10-A",
+    "code": "ANH10A",
+    "creator_id": "creator-1",
+    "created_at": "2026-06-15T08:00:00Z"
+  },
+  {
+    "id": "course-2",
+    "title": "Lớp Khoa Học Tự Nhiên 10-B",
+    "code": "KH10B",
+    "creator_id": "creator-1",
+    "created_at": "2026-06-16T09:30:00Z"
+  },
+  {
+    "id": "course-3",
+    "title": "Lớp Lịch Sử Việt Nam",
+    "code": "LSVN",
+    "creator_id": "creator-1",
+    "created_at": "2026-06-17T10:00:00Z"
+  }
+]

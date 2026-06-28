@@ -18,6 +18,7 @@ export function useTimer({ initialMinutes, onExpire }: UseTimerProps) {
   // Tick function
   useEffect(() => {
     if (initialMinutes > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSecondsLeft(initialMinutes * 60);
     }
   }, [initialMinutes]);

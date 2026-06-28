@@ -1,0 +1,9 @@
+.env
+.env.*
+.next
+.vercel
+node_modules
+coverage
+*.log
+.DS_Store
+check_attempts.js

@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { 
-  Clock, 
-  User, 
-  ArrowRight, 
-  ArrowLeft, 
-  CheckCircle2, 
+import { useParams } from "next/navigation";
+import {
+  Clock,
+  User,
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle2,
   AlertTriangle,
   Award,
   BookOpen,
@@ -16,47 +16,114 @@ import {
   ShieldAlert
 } from "lucide-react";
 import { useTimer } from "@/hooks/useTimer";
-import dummyQuizzes from "@/mocks/dummy_quizzes.json";
-import dummyQuestionsData from "@/mocks/dummy_questions.json";
-import { Quiz, Question, Answer } from "@/types";
+import { Question, QuizStatus } from "@/types";
+import { HeaderControls } from "@/components/HeaderControls";
+import { AppLogo } from "@/components/AppLogo";
+
+interface SubmitAttemptResponse {
+  success?: boolean;
+  data?: {
+    score: number;
+    maxPoints: number;
+    percentage: number;
+    grade: number;
+    maxGrade: number;
+    attemptNumber: number;
+  };
+  error?: string;
+}
+
+interface PublicQuiz {
+  id: string;
+  course_id: string | null;
+  title: string;
+  timer_minutes: number;
+  status: QuizStatus;
+}
+
+interface PublicQuizResponse {
+  success?: boolean;
+  data?: {
+    quiz: PublicQuiz;
+    questions: Question[];
+  };
+  error?: string;
+}
 
 export default function ParticipantPlayer() {
-  const router = useRouter();
   const params = useParams();
   const sessionId = params.sessionId as string;
 
   const [displayName, setDisplayName] = useState("Thí sinh");
   const [quizId, setQuizId] = useState("quiz-1");
-  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [quiz, setQuiz] = useState<PublicQuiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
-  
+
   const [currentIdx, setCurrentIdx] = useState(0);
   // Store participant answers: key is questionId, value is answerId
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [cheatAttempts, setCheatAttempts] = useState(0);
   const [showCheatWarning, setShowCheatWarning] = useState(false);
   const [finalScore, setFinalScore] = useState({ score: 0, maxPoints: 0, percentage: 0 });
+  const submitQuizRef = useRef<() => void>(() => {});
 
-  // Load session storage data
+  // Load storage data
   useEffect(() => {
-    const savedName = sessionStorage.getItem("display_name");
-    const savedQuizId = sessionStorage.getItem("quiz_id");
-    
-    if (savedName) setDisplayName(savedName);
-    if (savedQuizId) setQuizId(savedQuizId);
+    const loadData = async () => {
+      const savedName = localStorage.getItem("student_name") || sessionStorage.getItem("display_name");
+      const savedQuizId = sessionStorage.getItem("quiz_id") || localStorage.getItem("quiz_id");
 
-    const activeQuizId = savedQuizId || "quiz-1";
-    const foundQuiz = dummyQuizzes.find(q => q.id === activeQuizId);
-    if (foundQuiz) {
-      setQuiz(foundQuiz as Quiz);
-    }
+      if (savedName) setDisplayName(savedName);
+      if (savedQuizId) setQuizId(savedQuizId);
 
-    const foundQuestions = (dummyQuestionsData as Record<string, Question[]>)[activeQuizId];
-    if (foundQuestions) {
-      setQuestions(foundQuestions);
-    }
+      const activeQuizId = savedQuizId || "quiz-1";
+
+      const response = await fetch(`/api/public-quiz/${encodeURIComponent(activeQuizId)}`);
+      const payload = await response.json() as PublicQuizResponse;
+
+      if (response.ok && payload.success && payload.data) {
+        setQuiz(payload.data.quiz);
+        setQuestions(payload.data.questions);
+      }
+    };
+    loadData();
   }, [quizId]);
+
+  // Cheat handler
+  const triggerCheatWarning = useCallback(() => {
+    setCheatAttempts(prev => {
+      const next = prev + 1;
+      if (next >= 3) {
+        // Force submit if cheated too many times
+        setShowCheatWarning(true);
+        setTimeout(() => {
+          submitQuizRef.current();
+        }, 1500);
+      } else {
+        setShowCheatWarning(true);
+        setTimeout(() => setShowCheatWarning(false), 3000);
+      }
+      return next;
+    });
+  }, []);
+
+  // Timer Setup (defaults to 15 mins if loading)
+  const { formattedTime, secondsLeft, start } = useTimer({
+    initialMinutes: quiz?.timer_minutes || 15,
+    onExpire: () => {
+      // Auto-submit when time is up
+      handleSubmitQuiz();
+    }
+  });
+
+  // Start timer once quiz metadata loads
+  useEffect(() => {
+    if (quiz) {
+      start();
+    }
+  }, [quiz, start]);
 
   // Anti-cheat: Block Right-click, Copy, Paste, Focus out
   useEffect(() => {
@@ -77,7 +144,6 @@ export default function ParticipantPlayer() {
       triggerCheatWarning();
     };
 
-    // Watch focus out
     const handleBlur = () => {
       triggerCheatWarning();
     };
@@ -93,80 +159,76 @@ export default function ParticipantPlayer() {
       document.removeEventListener("paste", handlePaste);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [isSubmitted]);
-
-  // Cheat handler
-  const triggerCheatWarning = () => {
-    setCheatAttempts(prev => {
-      const next = prev + 1;
-      if (next >= 3) {
-        // Force submit if cheated too many times
-        setShowCheatWarning(true);
-        setTimeout(() => {
-          handleSubmitQuiz();
-        }, 1500);
-      } else {
-        setShowCheatWarning(true);
-        setTimeout(() => setShowCheatWarning(false), 3000);
-      }
-      return next;
-    });
-  };
-
-  // Timer Setup (defaults to 15 mins if loading)
-  const { formattedTime, secondsLeft, isExpired, start } = useTimer({
-    initialMinutes: quiz?.timer_minutes || 15,
-    onExpire: () => {
-      // Auto-submit when time is up
-      handleSubmitQuiz();
-    }
-  });
-
-  // Start timer once quiz metadata loads
-  useEffect(() => {
-    if (quiz) {
-      start();
-    }
-  }, [quiz, start]);
+  }, [isSubmitted, triggerCheatWarning]);
 
   // Handle select option
   const handleSelectOption = (questionId: string, answerId: string) => {
     if (isSubmitted) return;
-    
+
     const updated = { ...userAnswers, [questionId]: answerId };
     setUserAnswers(updated);
-    
+
     // Simulate real-time sync with localstorage
     localStorage.setItem(`response-${sessionId}`, JSON.stringify(updated));
   };
 
   // Submit & Auto-grading
-  const handleSubmitQuiz = () => {
-    if (isSubmitted) return;
-    
-    // Grade the test
-    let score = 0;
-    let maxPoints = 0;
+  const handleSubmitQuiz = async () => {
+    if (isSubmitted || isSubmitting) return;
+    setIsSubmitting(true);
 
-    questions.forEach(q => {
-      maxPoints += q.points;
-      const chosenAnswerId = userAnswers[q.id];
-      const correctAnswer = q.answers.find(a => a.is_correct);
-      
-      if (chosenAnswerId && correctAnswer && chosenAnswerId === correctAnswer.id) {
-        score += q.points;
+    try {
+      const studentId = localStorage.getItem("student_id") || "anonymous";
+      const studentName = localStorage.getItem("student_name") || displayName;
+
+      // Calculate duration in seconds
+      const totalMinutes = quiz?.timer_minutes || 15;
+      const durationSeconds = Math.max(5, (totalMinutes * 60) - secondsLeft);
+
+      const response = await fetch("/api/submit-attempt", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          quizId,
+          studentId,
+          displayName: studentName,
+          durationSeconds,
+          answers: userAnswers,
+        }),
+      });
+
+      const result = await response.json() as SubmitAttemptResponse;
+
+      if (!response.ok || !result.success || !result.data) {
+        alert(result.error || "Không thể nộp bài. Vui lòng thử lại.");
+        return;
       }
-    });
 
-    const percentage = maxPoints > 0 ? Math.round((score / maxPoints) * 100) : 0;
-    setFinalScore({ score, maxPoints, percentage });
-    setIsSubmitted(true);
-    
-    // Clear storage
-    sessionStorage.removeItem("display_name");
-    sessionStorage.removeItem("quiz_id");
-    localStorage.removeItem(`response-${sessionId}`);
+      setFinalScore({
+        score: result.data.score,
+        maxPoints: result.data.maxPoints,
+        percentage: result.data.percentage,
+      });
+      setIsSubmitted(true);
+
+      // Clear temp active session fields, but keep student info for future dashboard use!
+      sessionStorage.removeItem("quiz_id");
+      localStorage.removeItem(`response-${sessionId}`);
+    } catch (error) {
+      console.error("Submit quiz failed:", error);
+      alert("Không thể nộp bài do lỗi kết nối. Vui lòng thử lại.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  useEffect(() => {
+    submitQuizRef.current = () => {
+      void handleSubmitQuiz();
+    };
+  });
 
   if (!quiz || questions.length === 0) {
     return (
@@ -195,6 +257,7 @@ export default function ParticipantPlayer() {
       {/* 1. Header Row */}
       <header className="glass-panel sticky top-0 z-20 border-b border-border-subtle px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
+          <AppLogo alt="Logo" className="h-8 md:h-10 w-auto hidden sm:block mr-2 -ml-2" />
           <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
             <User className="w-4 h-4" />
           </div>
@@ -212,9 +275,12 @@ export default function ParticipantPlayer() {
           </div>
         )}
 
-        <div className="text-right">
-          <span className="text-xs text-text-secondary block">Mã đề thi</span>
-          <span className="font-bold text-xs uppercase tracking-wider">{quizId}</span>
+        <div className="flex items-center gap-4">
+          <div className="text-right hidden sm:block">
+            <span className="text-xs text-text-secondary block">Mã đề thi</span>
+            <span className="font-bold text-xs uppercase tracking-wider">{quizId}</span>
+          </div>
+          <HeaderControls />
         </div>
       </header>
 
@@ -225,8 +291,8 @@ export default function ParticipantPlayer() {
           <div className="text-xs">
             <h5 className="font-bold">Hành vi gian lận bị hạn chế!</h5>
             <p className="opacity-90">
-              {cheatAttempts >= 3 
-                ? "Vi phạm quá 3 lần. Hệ thống tự động nộp bài..." 
+              {cheatAttempts >= 3
+                ? "Vi phạm quá 3 lần. Hệ thống tự động nộp bài..."
                 : `Cảnh báo vi phạm (${cheatAttempts}/3): Không được sao chép hoặc rời tab!`}
             </p>
           </div>
@@ -244,7 +310,7 @@ export default function ParticipantPlayer() {
                 <span>Tiến độ: {progressPercent}%</span>
               </div>
               <div className="w-full h-2 bg-bg-surface rounded-full overflow-hidden border border-border-subtle/50">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-primary to-accent-magenta transition-all duration-300"
                   style={{ width: `${progressPercent}%` }}
                 />
@@ -259,7 +325,7 @@ export default function ParticipantPlayer() {
                 </span>
                 <span className="text-xs text-primary font-semibold">+{currentQuestion.points} điểm</span>
               </div>
-              
+
               <h2 className="text-lg md:text-xl font-semibold text-text-primary leading-relaxed">
                 {currentQuestion.content}
               </h2>
@@ -273,14 +339,14 @@ export default function ParticipantPlayer() {
                       key={answer.id}
                       onClick={() => handleSelectOption(currentQuestion.id, answer.id)}
                       className={`w-full text-left p-4 min-h-[52px] rounded-card border text-sm flex items-center gap-4 transition-all duration-200 cursor-pointer ${
-                        isSelected 
-                          ? "bg-primary/10 border-primary text-text-primary font-semibold shadow-md shadow-primary/5" 
+                        isSelected
+                          ? "bg-primary/10 border-primary text-text-primary font-semibold shadow-md shadow-primary/5"
                           : "bg-bg-surface border-border-subtle hover:border-border-hover text-text-secondary hover:text-text-primary"
                       }`}
                     >
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border transition-all ${
-                        isSelected 
-                          ? "bg-primary border-primary text-white scale-105" 
+                        isSelected
+                          ? "bg-primary border-primary text-white scale-105"
                           : "border-text-muted"
                       }`}>
                         {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
@@ -314,9 +380,10 @@ export default function ParticipantPlayer() {
               ) : (
                 <button
                   onClick={handleSubmitQuiz}
-                  className="py-2.5 px-6 rounded-standard bg-success hover:bg-success-hover text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-lg shadow-success/15"
+                  disabled={isSubmitting}
+                  className="py-2.5 px-6 rounded-standard bg-success hover:bg-success-hover disabled:opacity-60 disabled:cursor-wait text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-lg shadow-success/15"
                 >
-                  <span>Nộp bài thi</span>
+                  <span>{isSubmitting ? "Đang nộp..." : "Nộp bài thi"}</span>
                   <CheckCircle2 className="w-4 h-4" />
                 </button>
               )}
@@ -355,22 +422,45 @@ export default function ParticipantPlayer() {
               </div>
             )}
 
-            <div className="pt-2 border-t border-border-subtle/30">
-              <Link 
-                href="/"
-                className="w-full py-3 px-6 rounded-standard bg-primary hover:bg-primary-hover text-white font-medium text-sm transition-all focus-ring shadow-lg shadow-primary/15 flex items-center justify-center gap-2"
-              >
-                <Home className="w-4 h-4" />
-                <span>Quay lại trang chủ</span>
-              </Link>
+            <div className="pt-2 border-t border-border-subtle/30 space-y-2.5">
+              {sessionStorage.getItem("student_id") ? (
+                <>
+                  <Link
+                    href="/student/dashboard"
+                    className="w-full py-3 px-6 rounded-standard bg-primary hover:bg-primary-hover text-white font-medium text-sm transition-all focus-ring shadow-lg shadow-primary/15 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span>Quay lại Bảng điều khiển</span>
+                  </Link>
+
+                  {quiz?.course_id && (
+                    <Link
+                      href={`/course/${quiz.course_id}/leaderboard/${quiz.id}`}
+                      className="w-full py-2.5 px-6 rounded-standard bg-bg-surface hover:bg-bg-hover text-text-primary border border-border-subtle hover:border-text-secondary text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Award className="w-4 h-4 text-accent-magenta" />
+                      <span>Xem Bảng xếp hạng của lớp</span>
+                    </Link>
+                  )}
+                </>
+              ) : (
+                <Link
+                  href="/"
+                  className="w-full py-3 px-6 rounded-standard bg-primary hover:bg-primary-hover text-white font-medium text-sm transition-all focus-ring shadow-lg shadow-primary/15 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Home className="w-4 h-4" />
+                  <span>Quay lại trang chủ</span>
+                </Link>
+              )}
             </div>
           </div>
         )}
       </main>
 
       {/* 3. Footer */}
-      <footer className="max-w-2xl mx-auto w-full text-center text-[10px] text-text-muted pb-6 z-10 border-t border-border-subtle/20 pt-4">
-        Mọi câu trả lời được ghi nhận tự động. Trình thi bảo mật cao chống copy-paste.
+      <footer className="max-w-2xl mx-auto w-full text-center text-[10px] text-text-muted pb-6 z-10 border-t border-border-subtle/20 pt-4 flex flex-col gap-1">
+        <span>© 2026 Quiz Intelligence. Trình thi bảo mật cao.</span>
+        <span className="font-medium text-[11px]">Designed by <strong className="text-accent-magenta font-bold">Operation Intelligence</strong></span>
       </footer>
     </div>
   );

@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { HelpCircle, Clock, BookOpen, AlertCircle, Sparkles, ArrowLeft } from "lucide-react";
-import dummyQuizzes from "@/mocks/dummy_quizzes.json";
+import { supabase } from "@/lib/supabaseClient";
 import { Quiz } from "@/types";
+import { HeaderControls } from "@/components/HeaderControls";
+import { AppLogo } from "@/components/AppLogo";
 
 export default function ParticipantJoin() {
   const router = useRouter();
@@ -19,10 +21,13 @@ export default function ParticipantJoin() {
 
   // Load quiz details based on shortcode
   useEffect(() => {
-    const foundQuiz = dummyQuizzes.find(q => q.id === shortcode);
-    if (foundQuiz) {
-      setQuiz(foundQuiz as Quiz);
-    }
+    const fetchQuiz = async () => {
+      const { data } = await supabase.from('quizzes').select('*').eq('id', shortcode).single();
+      if (data) {
+        setQuiz(data as Quiz);
+      }
+    };
+    fetchQuiz();
   }, [shortcode]);
 
   // Handle Input change with validation on length
@@ -30,7 +35,7 @@ export default function ParticipantJoin() {
     // Remove extra starting spaces
     if (val.startsWith(" ")) val = val.trimStart();
     setDisplayName(val);
-    
+
     // Quick validation feedback
     if (val.length > 20) {
       setError("Tên tối đa 20 ký tự");
@@ -44,9 +49,9 @@ export default function ParticipantJoin() {
   // Submit Handler
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const trimmedName = displayName.trim();
-    
+
     // Strict backend-like validation
     if (trimmedName.length < 2 || trimmedName.length > 20) {
       setError("Tên phải từ 2 đến 20 ký tự và không chứa toàn khoảng trắng.");
@@ -54,7 +59,7 @@ export default function ParticipantJoin() {
     }
 
     setLoading(true);
-    
+
     // Simulate API call to create session (returning session_id)
     setTimeout(() => {
       setLoading(false);
@@ -63,7 +68,7 @@ export default function ParticipantJoin() {
       // Redirect to the player page with sessionId and pass the displayName & quizId in sessionStorage or query
       sessionStorage.setItem("display_name", trimmedName);
       sessionStorage.setItem("quiz_id", shortcode);
-      
+
       router.push(`/quiz/${mockSessionId}`);
     }, 1000);
   };
@@ -75,12 +80,17 @@ export default function ParticipantJoin() {
       <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-accent-magenta/5 blur-[120px] pointer-events-none" />
 
       {/* Header */}
-      <header className="max-w-4xl mx-auto w-full flex items-center justify-between z-10">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors">
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Về trang chủ</span>
-        </Link>
-        <span className="text-xs text-text-muted">Wayground Zero-Friction Flow</span>
+      <header className="max-w-4xl mx-auto w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 z-10">
+        <AppLogo className="h-10 md:h-12 w-auto object-contain -ml-2 md:-ml-4 drop-shadow-sm" />
+
+        <div className="flex items-center gap-3">
+          <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary bg-bg-surface/50 px-3 py-1.5 rounded-full border border-border-subtle hover:border-text-secondary transition-colors">
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Về trang chủ</span>
+          </Link>
+          <span className="text-xs text-text-muted hidden sm:inline">Wayground Zero-Friction Flow</span>
+          <HeaderControls />
+        </div>
       </header>
 
       {/* Main Join Form Card */}
@@ -94,7 +104,7 @@ export default function ParticipantJoin() {
                 Sẵn sàng tham gia
               </span>
               <h1 className="text-2xl font-bold tracking-tight px-4">{quiz.title}</h1>
-              
+
               <div className="flex items-center justify-center gap-4 text-xs text-text-secondary mt-1">
                 <span className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5 text-text-muted" />
@@ -133,7 +143,7 @@ export default function ParticipantJoin() {
                       error ? "border-danger focus:border-danger focus:ring-danger/20" : "border-border-subtle"
                     }`}
                   />
-                  
+
                   {error && (
                     <div className="flex items-center gap-1.5 text-xs text-danger mt-1 font-medium">
                       <AlertCircle className="w-3.5 h-3.5" />
@@ -158,7 +168,7 @@ export default function ParticipantJoin() {
                 </button>
               </form>
             </div>
-            
+
             <p className="text-[10px] text-text-muted text-center px-6 leading-relaxed">
               * Bằng cách tham gia, bạn đồng ý làm bài thi này. Điểm số sẽ được gửi trực tiếp đến giáo viên của bạn ngay sau khi hoàn thành.
             </p>
@@ -168,10 +178,10 @@ export default function ParticipantJoin() {
             <HelpCircle className="w-12 h-12 text-warning mx-auto animate-bounce" />
             <h2 className="text-lg font-bold text-text-primary">Không tìm thấy mã phòng thi</h2>
             <p className="text-text-secondary text-xs max-w-xs leading-relaxed">
-              Mã quiz "{shortcode}" không tồn tại hoặc đã bị đóng bởi giáo viên. Vui lòng kiểm tra lại đường dẫn chia sẻ.
+              Mã quiz &quot;{shortcode}&quot; không tồn tại hoặc đã bị đóng bởi giáo viên. Vui lòng kiểm tra lại đường dẫn chia sẻ.
             </p>
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="inline-block py-2 px-4 rounded-standard bg-bg-surface hover:bg-bg-hover text-xs font-semibold border border-border-subtle text-text-primary transition-all"
             >
               Quay lại trang chủ
@@ -181,8 +191,9 @@ export default function ParticipantJoin() {
       </main>
 
       {/* Footer */}
-      <footer className="max-w-4xl mx-auto w-full text-center text-[10px] text-text-muted pt-6 border-t border-border-subtle/20 z-10">
-        Wayground Quiz Platform • Thiết lập Zero-Friction giúp học sinh vào làm bài trong 3 giây.
+      <footer className="max-w-4xl mx-auto w-full text-center text-[10px] text-text-muted pt-6 border-t border-border-subtle/20 z-10 flex flex-col gap-1">
+        <span>© 2026 Quiz Intelligence. Thiết lập Zero-Friction Flow.</span>
+        <span className="font-medium text-[11px]">Designed by <strong className="text-accent-magenta font-bold">Operation Intelligence</strong></span>
       </footer>
     </div>
   );

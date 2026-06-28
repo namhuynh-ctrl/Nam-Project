@@ -20,6 +20,7 @@ export interface Question {
 export interface Quiz {
   id: string;
   creator_id: string;
+  course_id?: string; // Links to Course
   title: string;
   timer_minutes: number;
   status: QuizStatus;
@@ -27,6 +28,34 @@ export interface Quiz {
   questions?: Question[]; // Nested questions
   participant_count?: number; // UI metadata helper
   average_score?: number; // UI metadata helper
+}
+
+export interface Course {
+  id: string;
+  title: string;
+  code: string; // Course Join Code
+  creator_id: string;
+  created_at?: string;
+}
+
+export interface Attempt {
+  id: string;
+  quiz_id: string;
+  student_id: string; // ID of the student
+  display_name: string; // Name of the student
+  score: number;
+  max_score: number;
+  raw_score?: number;
+  raw_max_score?: number;
+  duration_seconds: number;
+  attempt_number: number;
+  created_at: string;
+}
+
+export interface StudentProfile {
+  id: string;
+  full_name: string;
+  joined_courses: string[]; // List of Course IDs
 }
 
 export interface ParticipantSession {

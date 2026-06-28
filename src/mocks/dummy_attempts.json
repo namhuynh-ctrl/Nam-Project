@@ -1,0 +1,57 @@
+[
+  {
+    "id": "att-1",
+    "quiz_id": "quiz-1",
+    "student_id": "student-1",
+    "display_name": "Nam Huỳnh",
+    "score": 8,
+    "max_score": 10,
+    "duration_seconds": 450,
+    "attempt_number": 1,
+    "created_at": "2026-06-25T10:00:00Z"
+  },
+  {
+    "id": "att-2",
+    "quiz_id": "quiz-1",
+    "student_id": "student-1",
+    "display_name": "Nam Huỳnh",
+    "score": 10,
+    "max_score": 10,
+    "duration_seconds": 320,
+    "attempt_number": 2,
+    "created_at": "2026-06-25T11:30:00Z"
+  },
+  {
+    "id": "att-3",
+    "quiz_id": "quiz-1",
+    "student_id": "student-2",
+    "display_name": "Minh Nguyễn",
+    "score": 9,
+    "max_score": 10,
+    "duration_seconds": 380,
+    "attempt_number": 1,
+    "created_at": "2026-06-25T10:15:00Z"
+  },
+  {
+    "id": "att-4",
+    "quiz_id": "quiz-1",
+    "student_id": "student-3",
+    "display_name": "Hoàng Trần",
+    "score": 8,
+    "max_score": 10,
+    "duration_seconds": 520,
+    "attempt_number": 1,
+    "created_at": "2026-06-25T10:20:00Z"
+  },
+  {
+    "id": "att-5",
+    "quiz_id": "quiz-1",
+    "student_id": "student-3",
+    "display_name": "Hoàng Trần",
+    "score": 8,
+    "max_score": 10,
+    "duration_seconds": 400,
+    "attempt_number": 2,
+    "created_at": "2026-06-25T11:00:00Z"
+  }
+]
