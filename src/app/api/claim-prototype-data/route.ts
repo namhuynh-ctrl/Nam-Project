@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabaseAdmin";
-import { PROTOTYPE_CREATOR_ID } from "@/lib/creatorAuth";
+import { PROTOTYPE_CREATOR_ID } from "@/lib/constants";
 import { getTeacherIdFromRequest } from "@/lib/serverTeacherAuth";
 
 function isClaimEnabled() {

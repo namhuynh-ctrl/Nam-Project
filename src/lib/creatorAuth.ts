@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabaseClient";
+import { PROTOTYPE_CREATOR_ID } from "@/lib/constants";
 
-export const PROTOTYPE_CREATOR_ID = "creator-1";
+export { PROTOTYPE_CREATOR_ID };
 
 export async function getActiveCreatorId() {
   const { data } = await supabase.auth.getSession();
