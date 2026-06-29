@@ -18,12 +18,14 @@ import { supabase } from "@/lib/supabaseClient";
 import { Course, Quiz, Attempt } from "@/types";
 import { HeaderControls } from "@/components/HeaderControls";
 import { AppLogo } from "@/components/AppLogo";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function StudentDashboard() {
   const router = useRouter();
+  const { t, language } = useLanguage();
 
   const [studentId, setStudentId] = useState("");
-  const [studentName, setStudentName] = useState("Học viên");
+  const [studentName, setStudentName] = useState(t.studentDefaultName);
   const [courses, setCourses] = useState<Course[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
@@ -84,7 +86,9 @@ export default function StudentDashboard() {
   const formatDuration = (secs: number) => {
     const mins = Math.floor(secs / 60);
     const remainingSecs = secs % 60;
-    return `${mins}p ${remainingSecs}s`;
+    return language === "en"
+      ? `${mins}m ${remainingSecs}s`
+      : `${mins}p ${remainingSecs}s`;
   };
 
   if (isLoading) {
@@ -113,14 +117,14 @@ export default function StudentDashboard() {
             className="inline-flex items-center gap-1 text-xs py-2 px-3.5 rounded-standard bg-bg-surface hover:bg-bg-hover text-text-primary border border-border-subtle hover:border-text-secondary font-medium transition-all"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Về Trang chủ</span>
+            <span>{t.backToHome}</span>
           </Link>
           <button
             onClick={handleLogout}
             className="inline-flex items-center gap-1.5 py-2 px-4 rounded-standard bg-danger/10 hover:bg-danger/25 text-danger border border-danger/20 text-xs font-semibold transition-all cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>Đăng xuất (Xóa thiết bị)</span>
+            <span>{t.studentLogout}</span>
           </button>
         </div>
       </header>
@@ -135,7 +139,7 @@ export default function StudentDashboard() {
               <User className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-xs text-text-secondary block">Xin chào học viên,</span>
+              <span className="text-xs text-text-secondary block">{t.studentGreeting}</span>
               <h1 className="text-xl font-bold tracking-tight">{studentName}</h1>
             </div>
           </div>
@@ -146,19 +150,19 @@ export default function StudentDashboard() {
           <div className="space-y-1">
             <span className="inline-flex items-center gap-1 text-[10px] bg-primary/10 border border-primary/20 text-primary py-0.5 px-2 rounded-full font-semibold">
               <Sparkles className="w-3 h-3 text-accent-magenta animate-pulse" />
-              Chế độ Học viên (LMS)
+              {t.studentModeBadge}
             </span>
-            <h2 className="text-lg font-bold text-text-primary">Tiến trình học tập của bạn</h2>
-            <p className="text-xs text-text-secondary">Làm đề thi thử, xem lịch sử làm bài và theo dõi bảng xếp hạng của lớp học.</p>
+            <h2 className="text-lg font-bold text-text-primary">{t.studentProgressTitle}</h2>
+            <p className="text-xs text-text-secondary">{t.studentProgressDesc}</p>
           </div>
           <div className="bg-bg-surface border border-border-subtle py-2 px-4 rounded-standard text-xs text-text-secondary">
-            Khóa học đã tham gia: <strong className="text-text-primary">{courses.length}</strong>
+            {t.studentJoinedCourses} <strong className="text-text-primary">{courses.length}</strong>
           </div>
         </div>
 
         {/* Joined Courses List Section */}
         <div className="space-y-6">
-          <h2 className="text-lg font-bold text-text-primary tracking-tight">Khóa học của tôi</h2>
+          <h2 className="text-lg font-bold text-text-primary tracking-tight">{t.studentMyCourses}</h2>
 
           {courses.length > 0 ? (
             <div className="space-y-8">
@@ -177,7 +181,7 @@ export default function StudentDashboard() {
                         <h3 className="font-semibold text-base text-text-primary">{course.title}</h3>
                       </div>
                       <span className="text-[10px] bg-bg-base border border-border-subtle py-1 px-3 rounded-full text-text-secondary font-semibold font-mono">
-                        MÃ: {course.code}
+                        {t.studentCourseCode} {course.code}
                       </span>
                     </div>
 
@@ -203,7 +207,7 @@ export default function StudentDashboard() {
                                   <div className="flex items-center gap-4 text-xs text-text-secondary">
                                     <span className="flex items-center gap-1">
                                       <Clock className="w-3.5 h-3.5 text-text-muted" />
-                                      {quiz.timer_minutes} phút làm bài
+                                      {t.studentQuizDuration.replace("{minutes}", String(quiz.timer_minutes))}
                                     </span>
                                   </div>
                                 </div>
@@ -213,25 +217,25 @@ export default function StudentDashboard() {
                                   {firstAttempt ? (
                                     <>
                                       <div className="space-y-1">
-                                        <span className="text-[10px] text-text-muted uppercase block font-semibold">Lần đầu (Xếp hạng)</span>
+                                        <span className="text-[10px] text-text-muted uppercase block font-semibold">{t.studentFirstAttempt}</span>
                                         <span className="font-bold text-text-primary">
-                                          Điểm: <strong className="text-accent-magenta text-sm">{firstAttempt.score}</strong>/{firstAttempt.max_score}
+                                          {t.studentScore} <strong className="text-accent-magenta text-sm">{firstAttempt.score}</strong>/{firstAttempt.max_score}
                                         </span>
                                         <span className="text-text-secondary text-[10px] block">
-                                          Thời gian: {formatDuration(firstAttempt.duration_seconds)}
+                                          {t.studentDuration} {formatDuration(firstAttempt.duration_seconds)}
                                         </span>
                                       </div>
                                       <div className="text-right space-y-1">
-                                        <span className="text-[10px] text-text-muted uppercase block font-semibold">Tập luyện</span>
+                                        <span className="text-[10px] text-text-muted uppercase block font-semibold">{t.studentPractice}</span>
                                         <span className="text-text-secondary text-[10px]">
-                                          Tổng số lần làm: <strong className="text-text-primary font-bold">{attemptCount}</strong>
+                                          {t.studentAttemptCount} <strong className="text-text-primary font-bold">{attemptCount}</strong>
                                         </span>
                                       </div>
                                     </>
                                   ) : (
                                     <div className="flex items-center gap-1.5 py-1 text-text-secondary">
                                       <span className="w-1.5 h-1.5 rounded-full bg-warning animate-ping" />
-                                      <span>Chưa thực hiện bài thi này</span>
+                                      <span>{t.studentNotAttempted}</span>
                                     </div>
                                   )}
                                 </div>
@@ -249,7 +253,7 @@ export default function StudentDashboard() {
                                       className="flex-1 py-2 px-4 rounded-standard bg-bg-surface hover:bg-bg-hover text-text-primary border border-border-subtle text-xs font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer"
                                     >
                                       <RotateCcw className="w-3.5 h-3.5 text-text-muted" />
-                                      <span>Làm lại thử</span>
+                                      <span>{t.studentRetryQuiz}</span>
                                     </button>
                                   ) : (
                                     <button
@@ -261,17 +265,17 @@ export default function StudentDashboard() {
                                       className="flex-1 py-2 px-4 rounded-standard bg-primary hover:bg-primary-hover text-white text-xs font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer shadow shadow-primary/20"
                                     >
                                       <Play className="w-3.5 h-3.5 fill-white" />
-                                      <span>Bắt đầu thi</span>
+                                      <span>{t.studentStartQuiz}</span>
                                     </button>
                                   )}
 
                                   <Link
                                     href={`/course/${course.id}/leaderboard/${quiz.id}`}
                                     className="py-2 px-3.5 rounded-standard bg-bg-surface hover:bg-bg-hover text-text-primary border border-border-subtle hover:border-text-secondary text-xs font-semibold transition-all flex items-center justify-center gap-1"
-                                    title="Xem Bảng xếp hạng của lớp"
+                                    title={t.studentLeaderboardTitle}
                                   >
                                     <Award className="w-3.5 h-3.5 text-accent-magenta" />
-                                    <span className="hidden sm:inline">Bảng xếp hạng</span>
+                                    <span className="hidden sm:inline">{t.studentLeaderboard}</span>
                                   </Link>
                                 </div>
                               </div>
@@ -280,7 +284,7 @@ export default function StudentDashboard() {
                         </div>
                       ) : (
                         <div className="text-center py-6 text-xs text-text-muted">
-                          Hiện tại chưa có bài Quiz nào được mở trong lớp này.
+                          {t.studentNoQuizzesInCourse}
                         </div>
                       )}
                     </div>
@@ -291,15 +295,15 @@ export default function StudentDashboard() {
           ) : (
             <div className="glass-panel p-12 rounded-card text-center flex flex-col items-center justify-center border-dashed border-border-subtle">
               <BookOpen className="w-12 h-12 text-text-muted mb-4" />
-              <h3 className="text-lg font-semibold text-text-primary mb-1">Chưa tham gia lớp học nào</h3>
+              <h3 className="text-lg font-semibold text-text-primary mb-1">{t.studentNoCoursesTitle}</h3>
               <p className="text-text-secondary text-sm mb-6 max-w-sm">
-                Nhập mã Code do giáo viên cung cấp ở trang chủ để đăng ký tham gia lớp học.
+                {t.studentNoCoursesDesc}
               </p>
               <Link
                 href="/"
                 className="inline-flex items-center gap-2 py-2.5 px-5 rounded-standard bg-primary hover:bg-primary-hover text-white font-medium text-sm transition-all focus-ring"
               >
-                <span>Nhập mã Code ngay</span>
+                <span>{t.studentEnterCode}</span>
               </Link>
             </div>
           )}
@@ -307,8 +311,8 @@ export default function StudentDashboard() {
 
         {/* Footer */}
         <footer className="w-full text-center text-xs text-text-muted py-6 mt-10 border-t border-border-subtle/30 flex flex-col gap-1">
-          <span>© 2026 Quiz Intelligence. All rights reserved.</span>
-          <span className="font-medium">Designed by <strong className="text-accent-magenta font-bold">Operation Intelligence</strong></span>
+          <span>{t.studentFooterCopyright}</span>
+          <span className="font-medium">{t.footerDesign}</span>
         </footer>
       </main>
     </div>
